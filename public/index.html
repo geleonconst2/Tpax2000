@@ -1,16 +1,22 @@
+
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tpax2000 — L2 Raid Boss Tracker</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <main class="shell">
     <header class="top">
-      <div><div class="brand">Tpax2000</div><div class="subtitle">L2 RAID BOSS TRACKER</div></div>
+      <div>
+        <div class="brand">Tpax2000</div>
+        <div class="subtitle">L2 RAID BOSS TRACKER</div>
+      </div>
       <button id="logout" class="light hidden">Logout</button>
     </header>
+
     <section id="login" class="login panel">
       <h2>Вход в трекер</h2>
       <form id="loginForm">
@@ -20,39 +26,90 @@
       </form>
       <p id="loginError" class="error"></p>
     </section>
+
     <section id="app" class="hidden">
       <nav class="tabs">
         <button data-tab="active" class="tab selected">Active Respawn</button>
         <button data-tab="upcoming" class="tab">Upcoming Respawn</button>
         <button data-tab="all" class="tab">All Bosses</button>
       </nav>
+
       <div class="filters">
-        <div id="upcomingHours" class="hours hidden">Show bosses entering respawn in:
-          <button data-hours="1" class="hour selected">1h</button><button data-hours="2" class="hour">2h</button>
-          <button data-hours="3" class="hour">3h</button><button data-hours="4" class="hour">4h</button>
+        <div id="upcomingHours" class="hours hidden">
+          Show bosses entering respawn in:
+          <button data-hours="1" class="hour selected">1h</button>
+          <button data-hours="2" class="hour">2h</button>
+          <button data-hours="3" class="hour">3h</button>
+          <button data-hours="4" class="hour">4h</button>
           <button data-hours="5" class="hour">5h</button>
         </div>
-        <label>Boss level: <input id="minLevel" type="number" min="1" max="99" value="1">
-          to <input id="maxLevel" type="number" min="1" max="99" value="99"></label>
+        <label>
+          Boss level:
+          <input id="minLevel" type="number" min="1" max="99" value="1">
+          to
+          <input id="maxLevel" type="number" min="1" max="99" value="99">
+        </label>
       </div>
+
       <div id="cards" class="cards"></div>
+
       <section id="allPanel" class="panel hidden">
-        <div class="table-head"><button id="addBoss" class="primary">+ Add Boss</button>
+        <div class="table-head">
+          <button id="addBoss" class="primary">+ Add Boss</button>
           <input id="search" placeholder="Search by name or location...">
-          <select id="sort"><option value="name">Name</option><option value="respawn">Respawn Date</option><option value="level">Level</option></select>
-          <select id="direction"><option value="asc">ASC</option><option value="desc">DESC</option></select>
+          <select id="sort">
+            <option value="name">Name</option>
+            <option value="respawn">Respawn Date</option>
+            <option value="level">Level</option>
+          </select>
+          <select id="direction">
+            <option value="asc">ASC</option>
+            <option value="desc">DESC</option>
+          </select>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Location</th><th>Respawn</th><th>Last kill</th><th>Who</th><th>Status</th><th>Timer</th><th>Actions</th></tr></thead><tbody id="bossRows"></tbody></table></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Level</th>
+                <th>Location</th>
+                <th>Respawn</th>
+                <th>Last kill</th>
+                <th>Who</th>
+                <th>Status</th>
+                <th>Timer</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bossRows"></tbody>
+          </table>
+        </div>
       </section>
     </section>
   </main>
-  <div id="modal" class="modal hidden"><form id="bossForm" class="dialog">
-    <button type="button" id="closeModal" class="close">×</button><h2 id="modalTitle">Add New Boss</h2>
-    <input name="name" placeholder="Boss name" required>
-    <input name="level" type="number" min="1" max="99" placeholder="Level (1-99)" required>
-    <input name="location" placeholder="Location" required>
-    <input name="respawn_hours" type="number" min="0.1" step="0.1" placeholder="Respawn hours" required>
-    <button class="primary">Save</button><p id="formError" class="error"></p>
-  </form></div>
+
+  <div id="modal" class="modal hidden">
+    <form id="bossForm" class="dialog">
+      <button type="button" id="closeModal" class="close">×</button>
+      <h2 id="modalTitle">Add New Boss</h2>
+
+      <input name="name" placeholder="Boss name" required>
+      <input name="level" type="number" min="1" max="99" placeholder="Level (1-99)" required>
+      <input name="location" placeholder="Location" required>
+      <input name="respawn_hours" type="number" min="0.1" step="0.1" placeholder="Respawn hours" required>
+
+      <label>
+        Last Kill Date &amp; Time
+        <input name="last_killed" type="datetime-local">
+      </label>
+
+      <button class="primary">Save</button>
+      <p id="formError" class="error"></p>
+    </form>
+  </div>
+
   <script src="/app.js"></script>
-</body></html>
+</body>
+</html>
