@@ -10,7 +10,7 @@ function filtered(){const min=Number($('#minLevel').value)||1,max=Number($('#max
 function render(){
   $('#upcomingHours').classList.toggle('hidden',tab!=='upcoming');allPanel.classList.toggle('hidden',tab!=='all');cards.classList.toggle('hidden',tab==='all');
   let list=filtered();
-  if(tab==='active')list=list.filter(b=>timeLeft(b)!==null&&timeLeft(b)>0);
+  if(tab==='active')list=list.filter(b=>timeLeft(b)!==null&&timeLeft(b)>0&&timeLeft(b)<=4*3600000);
   if(tab==='upcoming')list=list.filter(b=>timeLeft(b)!==null&&timeLeft(b)>0&&timeLeft(b)<=hours*3600000);
   if(tab!=='all'){cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{let t=timeLeft(b),cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';return `<article class="boss-card ${cls}"><div class="boss-name">${esc(b.name)}<span class="dot"></span></div><div class="meta">Level: ${b.level}</div><div class="meta">Location: ${esc(b.location)}</div><div class="meta">Last kill: ${b.last_killed?new Date(b.last_killed).toLocaleString():'Not killed yet'}</div><div class="timer" data-timer="${b.id}">${fmt(t)}</div><button onclick="markKilled(${b.id})">Mark killed</button></article>`}).join('')||'<p>No bosses found.</p>'}
   renderTable();
