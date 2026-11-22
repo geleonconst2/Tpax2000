@@ -1,0 +1,14 @@
+{
+  "name": "tpax2000-raid-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tpax2000 Lineage 2 Raid Boss Tracker",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "cookie-session": "^2.1.0",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}
