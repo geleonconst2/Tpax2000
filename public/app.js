@@ -62,11 +62,11 @@ function render(){
     );
   }
 
-  // Upcoming Respawn: боссы, которым осталось больше 4 часов
+  // Upcoming Respawn: боссы от 0 до выбранного количества часов
   if(tab==='upcoming'){
     list=list.filter(b=>
       timeLeft(b)!==null &&
-      timeLeft(b)>4*3600000 &&
+      timeLeft(b)>0 &&
       timeLeft(b)<=hours*3600000
     );
   }
