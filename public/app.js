@@ -5,9 +5,18 @@ let bosses=[],tab='active',hours=1,editing=null;
 const login=$('#login'),app=$('#app'),logout=$('#logout'),cards=$('#cards'),allPanel=$('#allPanel');
 
 async function api(url,opts={}){
-  const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});
+  const r=await fetch(url,{
+    ...opts,
+    credentials:'same-origin',
+    headers:{
+      'Content-Type':'application/json',
+      ...(opts.headers||{})
+    }
+  });
+
   let d={};
   try{d=await r.json()}catch{}
+
   if(!r.ok)throw Error(d.error||'Ошибка запроса');
   return d;
 }
@@ -22,21 +31,35 @@ function toLocalDateTime(value){
 
 function timeLeft(b){
   if(!b.last_killed)return null;
-  return new Date(b.last_killed).getTime()+Number(b.respawn_hours)*3600000-Date.now();
+  return new Date(b.last_killed).getTime()+
+    Number(b.respawn_hours)*3600000-Date.now();
 }
 
 function fmt(ms){
+  if(ms===null)return 'Not killed yet';
   if(ms<=0)return 'Ready';
-  let s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
+
+  let s=Math.floor(ms/1000);
+  let h=Math.floor(s/3600);
+  let m=Math.floor(s%3600/60);
+  let sec=s%60;
+
   return `${h}h ${m}m ${sec}s`;
 }
 
 function esc(s){
-  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
 }
 
 async function load(){
-  bosses=await api('/api/bosses');
+  const data=await api('/api/bosses');
+  bosses=data;
   render();
 }
 
@@ -53,48 +76,72 @@ function render(){
 
   let list=filtered();
 
-  // Active Respawn: боссы, которым осталось от 0 до 4 часов
   if(tab==='active'){
-    list=list.filter(b=>
-      timeLeft(b)!==null &&
-      timeLeft(b)>0 &&
-      timeLeft(b)<=4*3600000
-    );
+    list=list.filter(b=>{
+      const t=timeLeft(b);
+      return t!==null&&t>0&&t<=4*3600000;
+    });
   }
 
-  // Upcoming Respawn: боссы от 0 до выбранного количества часов
   if(tab==='upcoming'){
-    list=list.filter(b=>
-      timeLeft(b)!==null &&
-      timeLeft(b)>0 &&
-      timeLeft(b)<=hours*3600000
-    );
+    list=list.filter(b=>{
+      const t=timeLeft(b);
+      const untilActive=t-4*3600000;
+
+      return t!==null&&
+        untilActive>0&&
+        untilActive<=hours*3600000;
+    });
   }
 
   if(tab!=='all'){
-    cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{
-      let t=timeLeft(b),cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';
-      return `<article class="boss-card ${cls}">
-        <div class="boss-name">${esc(b.name)}<span class="dot"></span></div>
-        <div class="meta">Level: ${b.level}</div>
-        <div class="meta">Location: ${esc(b.location)}</div>
-        <div class="meta">Last kill: ${b.last_killed?new Date(b.last_killed).toLocaleString():'Not killed yet'}</div>
-        <div class="timer" data-timer="${b.id}">${fmt(t)}</div>
-        <button onclick="markKilled(${b.id})">Mark killed</button>
-      </article>`;
-    }).join('')||'<p>No bosses found.</p>';
+    cards.innerHTML=list
+      .sort((a,b)=>{
+        const ta=timeLeft(a)-(tab==='upcoming'?4*3600000:0);
+        const tb=timeLeft(b)-(tab==='upcoming'?4*3600000:0);
+        return ta-tb;
+      })
+      .map(b=>{
+        const t=timeLeft(b);
+
+        const displayTime=tab==='upcoming'
+          ?t-4*3600000
+          :t;
+
+        const cls=tab==='upcoming'
+          ?'red'
+          :displayTime<3600000?'green':'yellow';
+
+        return `<article class="boss-card ${cls}">
+          <div class="boss-name">${esc(b.name)}<span class="dot"></span></div>
+          <div class="meta">Level: ${b.level}</div>
+          <div class="meta">Location: ${esc(b.location)}</div>
+          <div class="meta">Last kill: ${b.last_killed?new Date(b.last_killed).toLocaleString():'Not killed yet'}</div>
+          <div class="timer" data-timer="${b.id}">${fmt(displayTime)}</div>
+          <button onclick="markKilled(${b.id})">Mark killed</button>
+        </article>`;
+      }).join('')||'<p>No bosses found.</p>';
   }
 
   renderTable();
 }
 
 function renderTable(){
-  const q=$('#search').value.toLowerCase(),sort=$('#sort').value,dir=$('#direction').value;
-  let list=filtered().filter(b=>(b.name+' '+b.location).toLowerCase().includes(q));
+  const q=$('#search').value.toLowerCase();
+  const sort=$('#sort').value;
+  const dir=$('#direction').value;
+
+  let list=filtered().filter(b=>
+    (b.name+' '+b.location).toLowerCase().includes(q)
+  );
 
   list.sort((a,b)=>{
-    let x=sort==='level'?a.level:sort==='respawn'?(timeLeft(a)??Infinity):a.name.toLowerCase();
-    let y=sort==='level'?b.level:sort==='respawn'?(timeLeft(b)??Infinity):b.name.toLowerCase();
+    let x=sort==='level'?a.level:
+      sort==='respawn'?(timeLeft(a)??Infinity):a.name.toLowerCase();
+
+    let y=sort==='level'?b.level:
+      sort==='respawn'?(timeLeft(b)??Infinity):b.name.toLowerCase();
+
     return (x>y?1:x<y?-1:0)*(dir==='asc'?1:-1);
   });
 
@@ -119,23 +166,31 @@ window.markKilled=async id=>{
   try{
     await api(`/api/bosses/${id}/kill`,{method:'POST'});
     await load();
-  }catch(e){alert(e.message)}
+  }catch(e){
+    alert(e.message);
+  }
 };
 
 window.deleteBoss=async id=>{
   if(!confirm('Удалить этого РБ?'))return;
+
   try{
     await api(`/api/bosses/${id}`,{method:'DELETE'});
     await load();
-  }catch(e){alert(e.message)}
+  }catch(e){
+    alert(e.message);
+  }
 };
 
 window.editBoss=id=>{
   const b=bosses.find(x=>x.id===id);
+  if(!b)return;
+
   editing=id;
   $('#modalTitle').textContent='Edit Boss';
 
   const f=$('#bossForm');
+
   f.elements.name.value=b.name;
   f.elements.level.value=b.level;
   f.elements.location.value=b.location;
@@ -154,7 +209,9 @@ $('#addBoss').onclick=()=>{
   $('#modal').classList.remove('hidden');
 };
 
-$('#closeModal').onclick=()=>$('#modal').classList.add('hidden');
+$('#closeModal').onclick=()=>{
+  $('#modal').classList.add('hidden');
+};
 
 $('#bossForm').onsubmit=async e=>{
   e.preventDefault();
@@ -163,10 +220,12 @@ $('#bossForm').onsubmit=async e=>{
 
   if(body.last_killed){
     const date=new Date(body.last_killed);
+
     if(Number.isNaN(date.getTime())){
       $('#formError').textContent='Неправильная дата';
       return;
     }
+
     body.last_killed=date.toISOString();
   }else{
     body.last_killed=null;
@@ -185,57 +244,110 @@ $('#bossForm').onsubmit=async e=>{
   }
 };
 
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
-  tab=b.dataset.tab;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('selected',x===b));
-  render();
+document.querySelectorAll('.tab').forEach(b=>{
+  b.onclick=()=>{
+    tab=b.dataset.tab;
+
+    document.querySelectorAll('.tab').forEach(x=>
+      x.classList.toggle('selected',x===b)
+    );
+
+    render();
+  };
 });
 
-document.querySelectorAll('.hour').forEach(b=>b.onclick=()=>{
-  hours=Number(b.dataset.hours);
-  document.querySelectorAll('.hour').forEach(x=>x.classList.toggle('selected',x===b));
-  render();
+document.querySelectorAll('.hour').forEach(b=>{
+  b.onclick=()=>{
+    hours=Number(b.dataset.hours);
+
+    document.querySelectorAll('.hour').forEach(x=>
+      x.classList.toggle('selected',x===b)
+    );
+
+    render();
+  };
 });
 
-['minLevel','maxLevel','search','sort','direction'].forEach(id=>$('#'+id).addEventListener('input',render));
+['minLevel','maxLevel','search','sort','direction'].forEach(id=>{
+  $('#'+id).addEventListener('input',render);
+});
 
 $('#loginForm').onsubmit=async e=>{
   e.preventDefault();
+
   const f=new FormData(e.target);
+  const button=e.submitter;
+
+  if(button)button.disabled=true;
+
   try{
-    await api('/api/login',{method:'POST',body:JSON.stringify(Object.fromEntries(f))});
-    $('#loginError').textContent='';
+    await api('/api/login',{
+      method:'POST',
+      body:JSON.stringify(Object.fromEntries(f))
+    });
+
     await enter();
-  }catch(err){$('#loginError').textContent=err.message}
+  }catch(err){
+    $('#loginError').textContent=err.message;
+  }finally{
+    if(button)button.disabled=false;
+  }
 };
 
 logout.onclick=async()=>{
-  await api('/api/logout',{method:'POST'});
+  try{
+    await api('/api/logout',{method:'POST'});
+  }catch(e){
+    console.error(e);
+  }
+
   location.reload();
 };
 
 async function enter(){
-  login.classList.add('hidden');
-  app.classList.remove('hidden');
-  logout.classList.remove('hidden');
-  await load();
+  try{
+    await load();
+
+    login.classList.add('hidden');
+    app.classList.remove('hidden');
+    logout.classList.remove('hidden');
+    $('#loginError').textContent='';
+
+  }catch(e){
+    login.classList.remove('hidden');
+    app.classList.add('hidden');
+    logout.classList.add('hidden');
+
+    $('#loginError').textContent=e.message;
+    throw e;
+  }
 }
 
 (async()=>{
   try{
     const me=await api('/api/me');
-    if(me.loggedIn)await enter();
-  }catch{}
+
+    if(me.loggedIn){
+      await enter();
+    }
+  }catch(e){
+    console.error('Проверка авторизации:',e);
+  }
 
   setInterval(()=>{
     document.querySelectorAll('[data-timer]').forEach(el=>{
       const b=bosses.find(x=>x.id===Number(el.dataset.timer));
-      if(b)el.textContent=fmt(timeLeft(b));
+      if(b)el.textContent=fmt(
+        tab==='upcoming'?timeLeft(b)-4*3600000:timeLeft(b)
+      );
     });
+
     if(tab==='all')renderTable();
   },1000);
 
   setInterval(()=>{
-    if(!app.classList.contains('hidden'))load().catch(()=>{});
+    if(!app.classList.contains('hidden')){
+      load().catch(e=>console.error(e));
+    }
   },5000);
 })();
