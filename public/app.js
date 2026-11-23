@@ -26,6 +26,7 @@ function timeLeft(b){
 }
 
 function fmt(ms){
+  if(ms===null)return '—';
   if(ms<=0)return 'Ready';
   let s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
   return `${h}h ${m}m ${sec}s`;
@@ -53,27 +54,26 @@ function render(){
 
   let list=filtered();
 
-  // Active Respawn: боссы, которым осталось от 0 до 4 часов
+  // Active Respawn: только боссы, которым осталось 4 часа или меньше
   if(tab==='active'){
-    list=list.filter(b=>
-      timeLeft(b)!==null &&
-      timeLeft(b)>0 &&
-      timeLeft(b)<=4*3600000
-    );
+    list=list.filter(b=>{
+      const t=timeLeft(b);
+      return t!==null&&t>0&&t<=4*3600000;
+    });
   }
 
-  // Upcoming Respawn: боссы от 0 до выбранного количества часов
+  // Upcoming Respawn: только боссы, которым осталось БОЛЬШЕ 4 часов
   if(tab==='upcoming'){
-    list=list.filter(b=>
-      timeLeft(b)!==null &&
-      timeLeft(b)>0 &&
-      timeLeft(b)<=hours*3600000
-    );
+    list=list.filter(b=>{
+      const t=timeLeft(b);
+      return t!==null&&t>4*3600000&&t<=hours*3600000;
+    });
   }
 
   if(tab!=='all'){
     cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{
-      let t=timeLeft(b),cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';
+      let t=timeLeft(b);
+      let cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';
       return `<article class="boss-card ${cls}">
         <div class="boss-name">${esc(b.name)}<span class="dot"></span></div>
         <div class="meta">Level: ${b.level}</div>
@@ -228,11 +228,12 @@ async function enter(){
   }catch{}
 
   setInterval(()=>{
-    document.querySelectorAll('[data-timer]').forEach(el=>{
-      const b=bosses.find(x=>x.id===Number(el.dataset.timer));
-      if(b)el.textContent=fmt(timeLeft(b));
-    });
-    if(tab==='all')renderTable();
+    if(tab==='all'){
+      renderTable();
+    }else{
+      // Проверяем переход между Upcoming и Active каждую секунду
+      render();
+    }
   },1000);
 
   setInterval(()=>{
