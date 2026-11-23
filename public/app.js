@@ -20,13 +20,9 @@ function toLocalDateTime(value){
   return new Date(d.getTime()-offset).toISOString().slice(0,16);
 }
 
-// Расчёт времени респауна с вычитанием 4 часов
 function timeLeft(b){
   if(!b.last_killed)return null;
-  return new Date(b.last_killed).getTime()
-    +Number(b.respawn_hours)*3600000
-    -4*3600000
-    -Date.now();
+  return new Date(b.last_killed).getTime()+Number(b.respawn_hours)*3600000-Date.now();
 }
 
 function fmt(ms){
@@ -58,7 +54,7 @@ function render(){
 
   let list=filtered();
 
-  // Active Respawn: боссы, которым осталось от 0 до 4 часов
+  // Active Respawn: только боссы, которым осталось 4 часа или меньше
   if(tab==='active'){
     list=list.filter(b=>{
       const t=timeLeft(b);
@@ -66,7 +62,7 @@ function render(){
     });
   }
 
-  // Upcoming Respawn: боссы, которым осталось больше 4 часов
+  // Upcoming Respawn: только боссы, которым осталось БОЛЬШЕ 4 часов
   if(tab==='upcoming'){
     list=list.filter(b=>{
       const t=timeLeft(b);
@@ -78,7 +74,6 @@ function render(){
     cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{
       let t=timeLeft(b);
       let cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';
-
       return `<article class="boss-card ${cls}">
         <div class="boss-name">${esc(b.name)}<span class="dot"></span></div>
         <div class="meta">Level: ${b.level}</div>
@@ -236,6 +231,7 @@ async function enter(){
     if(tab==='all'){
       renderTable();
     }else{
+      // Проверяем переход между Upcoming и Active каждую секунду
       render();
     }
   },1000);
