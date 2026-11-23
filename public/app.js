@@ -20,9 +20,11 @@ function toLocalDateTime(value){
   return new Date(d.getTime()-offset).toISOString().slice(0,16);
 }
 
+// Полное время до респауна
 function timeLeft(b){
   if(!b.last_killed)return null;
-  return new Date(b.last_killed).getTime()+Number(b.respawn_hours)*3600000-Date.now();
+  return new Date(b.last_killed).getTime()
+    +Number(b.respawn_hours)*3600000-Date.now();
 }
 
 function fmt(ms){
@@ -54,7 +56,7 @@ function render(){
 
   let list=filtered();
 
-  // Active Respawn: только боссы, которым осталось 4 часа или меньше
+  // Active Respawn: показываем только последние 4 часа
   if(tab==='active'){
     list=list.filter(b=>{
       const t=timeLeft(b);
@@ -62,24 +64,30 @@ function render(){
     });
   }
 
-  // Upcoming Respawn: только боссы, которым осталось БОЛЬШЕ 4 часов
+  // Upcoming Respawn: время до начала 4-часового окна
   if(tab==='upcoming'){
     list=list.filter(b=>{
       const t=timeLeft(b);
-      return t!==null&&t>4*3600000&&t<=hours*3600000;
+      const untilActive=t-4*3600000;
+      return t!==null&&t>4*3600000&&untilActive<=hours*3600000;
     });
   }
 
   if(tab!=='all'){
     cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{
       let t=timeLeft(b);
+
+      // В Upcoming показываем время до начала Active Respawn
+      let displayTime=tab==='upcoming'?t-4*3600000:t;
+
       let cls=tab==='upcoming'?'red':t<3600000?'green':'yellow';
+
       return `<article class="boss-card ${cls}">
         <div class="boss-name">${esc(b.name)}<span class="dot"></span></div>
         <div class="meta">Level: ${b.level}</div>
         <div class="meta">Location: ${esc(b.location)}</div>
         <div class="meta">Last kill: ${b.last_killed?new Date(b.last_killed).toLocaleString():'Not killed yet'}</div>
-        <div class="timer" data-timer="${b.id}">${fmt(t)}</div>
+        <div class="timer" data-timer="${b.id}">${fmt(displayTime)}</div>
         <button onclick="markKilled(${b.id})">Mark killed</button>
       </article>`;
     }).join('')||'<p>No bosses found.</p>';
@@ -227,11 +235,9 @@ async function enter(){
     if(me.loggedIn)await enter();
   }catch{}
 
+  // Обновляем таймеры и автоматически перемещаем боссов
   setInterval(()=>{
-    if(tab==='all'){
-      renderTable();
-    }else{
-      // Проверяем переход между Upcoming и Active каждую секунду
+    if(!app.classList.contains('hidden')){
       render();
     }
   },1000);
