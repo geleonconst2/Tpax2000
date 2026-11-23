@@ -53,8 +53,23 @@ function render(){
 
   let list=filtered();
 
-  if(tab==='active')list=list.filter(b=>timeLeft(b)!==null&&timeLeft(b)>0&&timeLeft(b)<=4*3600000);
-  if(tab==='upcoming')list=list.filter(b=>timeLeft(b)!==null&&timeLeft(b)>0&&timeLeft(b)<=hours*3600000);
+  // Active Respawn: боссы, которым осталось от 0 до 4 часов
+  if(tab==='active'){
+    list=list.filter(b=>
+      timeLeft(b)!==null &&
+      timeLeft(b)>0 &&
+      timeLeft(b)<=4*3600000
+    );
+  }
+
+  // Upcoming Respawn: боссы, которым осталось больше 4 часов
+  if(tab==='upcoming'){
+    list=list.filter(b=>
+      timeLeft(b)!==null &&
+      timeLeft(b)>4*3600000 &&
+      timeLeft(b)<=hours*3600000
+    );
+  }
 
   if(tab!=='all'){
     cards.innerHTML=list.sort((a,b)=>timeLeft(a)-timeLeft(b)).map(b=>{
