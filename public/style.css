@@ -175,11 +175,25 @@ button:hover {
 }
 
 .boss-card.green {
-    border-color: #d22d3a;
+    border-color: #ff4b55;
 }
 
 .boss-card.yellow {
     border-color: var(--gold);
+}
+
+/* Active Respawn: меньше часа — вся информация синяя */
+.boss-card.green .boss-name,
+.boss-card.green .meta,
+.boss-card.green .timer {
+    color: #2876b9;
+}
+
+/* Active Respawn: больше часа — весь текст белый */
+.boss-card.yellow .boss-name,
+.boss-card.yellow .meta,
+.boss-card.yellow .timer {
+    color: #fff;
 }
 
 .boss-card.red {
