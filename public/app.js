@@ -164,7 +164,7 @@ function renderTable(){
 
 /* ОКНО ПОДТВЕРЖДЕНИЯ MARK KILLED */
 
-function confirmKill(){
+function confirmKill(bossName){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');
 
@@ -207,7 +207,7 @@ function confirmKill(){
         font-size:14px;
         line-height:1.5;
         margin-bottom:25px;
-      ">Ты действительно хочешь отметить босса убитым?</div>
+      ">Ты действительно хочешь отметить босса <b>${esc(bossName)}</b> убитым?</div>
 
       <div style="
         display:flex;
@@ -266,7 +266,8 @@ function confirmKill(){
 }
 
 window.markKilled=async id=>{
-  const confirmed=await confirmKill();
+  const boss=bosses.find(b=>b.id===id);
+  const confirmed=await confirmKill(boss?.name||'');
 
   if(!confirmed)return;
 
