@@ -162,7 +162,114 @@ function renderTable(){
   </tr>`).join('');
 }
 
+/* ОКНО ПОДТВЕРЖДЕНИЯ MARK KILLED */
+
+function confirmKill(){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+
+    overlay.style.cssText=`
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:rgba(0,0,0,.8);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    `;
+
+    const box=document.createElement('div');
+
+    box.style.cssText=`
+      width:100%;
+      max-width:360px;
+      background:#252528;
+      border:2px solid #a6ff00;
+      border-radius:14px;
+      padding:28px 22px;
+      text-align:center;
+      box-shadow:0 0 25px rgba(166,255,0,.25);
+      font-family:Arial,sans-serif;
+      position:relative;
+    `;
+
+    box.innerHTML=`
+      <div style="
+        color:#a6ff00;
+        font-size:27px;
+        font-weight:bold;
+        margin-bottom:18px;
+      ">Дурак?</div>
+
+      <div style="
+        color:white;
+        font-size:14px;
+        line-height:1.5;
+        margin-bottom:25px;
+      ">Ты действительно хочешь отметить босса убитым?</div>
+
+      <div style="
+        display:flex;
+        gap:12px;
+      ">
+        <button id="killYes" style="
+          flex:1;
+          background:#a6ff00;
+          color:#111;
+          border:0;
+          border-radius:6px;
+          padding:12px;
+          font-size:15px;
+          font-weight:bold;
+          cursor:pointer;
+        ">Да</button>
+
+        <button id="killNo" style="
+          flex:1;
+          background:#444449;
+          color:white;
+          border:0;
+          border-radius:6px;
+          padding:12px;
+          font-size:15px;
+          font-weight:bold;
+          cursor:pointer;
+        ">Отмена</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function close(result){
+      document.removeEventListener('keydown',onKey);
+      overlay.remove();
+      resolve(result);
+    }
+
+    function onKey(e){
+      if(e.key==='Escape'){
+        close(false);
+      }
+    }
+
+    document.addEventListener('keydown',onKey);
+
+    overlay.addEventListener('click',e=>{
+      if(e.target===overlay)close(false);
+    });
+
+    box.querySelector('#killYes').onclick=()=>close(true);
+    box.querySelector('#killNo').onclick=()=>close(false);
+  });
+}
+
 window.markKilled=async id=>{
+  const confirmed=await confirmKill();
+
+  if(!confirmed)return;
+
   try{
     await api(`/api/bosses/${id}/kill`,{method:'POST'});
     await load();
