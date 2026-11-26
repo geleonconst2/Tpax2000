@@ -23,6 +23,7 @@ body {
     min-height: 100vh;
     color: #fff;
     font: 14px Arial, sans-serif;
+
     background-color: #111113;
     background-image:
         linear-gradient(90deg, rgba(0,0,0,.84), rgba(0,0,0,.54)),
@@ -126,18 +127,12 @@ button:hover {
     margin-bottom: 16px;
 }
 
-/* Все активные вкладки — салатовые */
+/* Активные вкладки — салатовые */
 .tab.selected,
 .hour.selected {
     background: var(--lime);
     color: #111;
     box-shadow: 0 0 0 1px var(--lime);
-}
-
-/* Mark Kill — всегда салатовая */
-.kill {
-    background: var(--lime) !important;
-    color: #111 !important;
 }
 
 .filters {
@@ -182,30 +177,29 @@ button:hover {
     gap: 9px;
 }
 
-.boss-card.green {
-    border-color: #ff4b55;
+/* Салатовая рамка карточек */
+.boss-card.green,
+.boss-card.red {
+    border-color: var(--lime);
+    box-shadow: 0 0 8px rgba(166,255,0,.25);
 }
 
 .boss-card.yellow {
     border-color: var(--gold);
 }
 
-/* Active Respawn: меньше часа — вся информация синяя */
+/* Active Respawn: меньше часа — информация синяя */
 .boss-card.green .boss-name,
 .boss-card.green .meta,
 .boss-card.green .timer {
     color: #2876b9;
 }
 
-/* Active Respawn: больше часа — весь текст белый */
+/* Active Respawn: больше часа — текст белый */
 .boss-card.yellow .boss-name,
 .boss-card.yellow .meta,
 .boss-card.yellow .timer {
     color: #fff;
-}
-
-.boss-card.red {
-    border-color: #ff4b55;
 }
 
 .boss-name {
@@ -243,8 +237,12 @@ button:hover {
     margin-top: auto;
 }
 
-.boss-card button {
-    background: var(--red);
+/* Кнопка Mark killed — салатовая */
+.boss-card button,
+.kill {
+    background: var(--lime) !important;
+    color: #111 !important;
+    border: 1px solid var(--lime);
     width: 100%;
     padding: 8px;
 }
@@ -387,3 +385,4 @@ th {
         font-size: 26px;
     }
 }
+
