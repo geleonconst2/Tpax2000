@@ -185,18 +185,18 @@ function confirmKill(){
       width:100%;
       max-width:360px;
       background:#252528;
-      border:2px solid #a6ff00;
+      border:2px solid #78A832;
       border-radius:14px;
       padding:28px 22px;
       text-align:center;
-      box-shadow:0 0 25px rgba(166,255,0,.25);
+      box-shadow:0 0 20px rgba(120,168,50,.18);
       font-family:Arial,sans-serif;
       position:relative;
     `;
 
     box.innerHTML=`
       <div style="
-        color:#a6ff00;
+        color:#78A832;
         font-size:27px;
         font-weight:bold;
         margin-bottom:18px;
@@ -215,7 +215,7 @@ function confirmKill(){
       ">
         <button id="killYes" style="
           flex:1;
-          background:#a6ff00;
+          background:#78A832;
           color:#111;
           border:0;
           border-radius:6px;
